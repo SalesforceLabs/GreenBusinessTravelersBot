@@ -2,6 +2,7 @@
   "orgName": "djuang company",
   "edition": "Developer",
   "features": ["EnableSetPasswordInApi"],
+  "namespace": "mulesoft_pse",
   "settings": {
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
