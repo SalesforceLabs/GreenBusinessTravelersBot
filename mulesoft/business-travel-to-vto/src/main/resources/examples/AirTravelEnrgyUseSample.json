@@ -1,0 +1,12 @@
+[{
+  "Name": "PSTest7",
+  "Scope3EmssnSrcId": "0pc8Y000000blmSQAQ",
+  "AirTravelEmssnFctrId": "0nt8Y000000bliFQAQ",
+  "SegmentDistance": 500.0,
+  "SegmentDistanceUnit": "Kilometers",
+  "CostCenter": "AMER",
+  "SourceCity": "Raleigh",
+  "DestinationCity": "San Francisco",
+  "StartDate": "2022-09-10T11:11:11.1Z",
+  "EndDate": "2022-10-20T11:11:11.0Z"
+}]

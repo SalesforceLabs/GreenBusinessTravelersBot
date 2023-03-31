@@ -1,0 +1,58 @@
+[
+    {
+        "ExpenseReportHeader": {
+            "ReportID": "124",
+            "ReportName": "Jon Doe Expenses",
+            "ReportDate": "2022-12-17T00:00:00Z",
+            "CostCenter": "50000"
+        },
+        "ExpenseReportDetailArray": [
+            {
+                "ExpenseType": "Airfare",
+                "BusinessPurpose": "Customer facing",
+                "PurposeDetail": "https://org62accountlink",
+                "TransactionDate": "2022-12-17T00:00:00Z",
+                "Vendor": "AMERICAN AIRLINES",
+                "CityStart": "CLT",
+                "CityEnd": "AUS",
+                "DistanceKm": "123",
+                "StartDateUtc": "2022-12-17T00:00:00Z",
+                "EndDateUtc": "2022-12-18T00:00:00Z"
+            }
+        ]
+    },
+    {
+        "ExpenseReportHeader": {
+            "ReportID": "998",
+            "ReportName": "Jane Zoe Expenses",
+            "ReportDate": "2022-12-17T00:00:00Z",
+            "CostCenter": "60000"
+        },
+        "ExpenseReportDetailArray": [
+            {
+                "ExpenseType": "Airfare",
+                "BusinessPurpose": "Customer facing",
+                "PurposeDetail": "https://org62accountlink",
+                "TransactionDate": "2022-12-17T00:00:00Z",
+                "Vendor": "AMERICAN AIRLINES",
+                "CityStart": "CLT",
+                "CityEnd": "AUS",
+                "DistanceKm": "123",
+                "StartDateUtc": "2022-12-17T00:00:00Z",
+                "EndDateUtc": "2022-12-18T00:00:00Z"
+            },
+            {
+                "ExpenseType": "Airfare",
+                "BusinessPurpose": "Customer facing",
+                "PurposeDetail": "https://org62accountlink",
+                "TransactionDate": "2022-12-17T02:00:00Z",
+                "Vendor": "AMERICAN AIRLINES",
+                "CityStart": "AUS",
+                "CityEnd": "CLT",
+                "DistanceKm": "123",
+                "StartDateUtc": "2022-12-17T02:00:00Z",
+                "EndDateUtc": "2022-12-18T02:00:00Z"
+            }
+        ]
+    }
+]

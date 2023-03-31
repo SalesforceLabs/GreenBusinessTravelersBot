@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:slack="http://www.mulesoft.org/schema/mule/slack"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/slack http://www.mulesoft.org/schema/mule/slack/current/mule-slack.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="c4ba694e-70d1-4639-af55-262e177be91a" >
+		<salesforce:basic-connection username="${sfdc.user}" password="${sfdc.pass}" securityToken="${sfdc.token}" url="https://login.salesforce.com/services/Soap/u/56.0" />
+	</salesforce:sfdc-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="7e2b4c59-cd33-4104-bf1a-3c1a8ac76392" file="config.yaml" />
+	<slack:config name="Slack_Config" doc:name="Slack Config" doc:id="cd4f4169-e942-47b8-ae6a-f0a9834e674a" >
+		<slack:slack-auth-connection >
+			<slack:oauth-authorization-code consumerKey="${slack.consumerkey}" consumerSecret="${slack.consumersecret}" authorizationUrl="https://slack.com/oauth/v2/authorize" accessTokenUrl="https://slack.com/api/oauth.v2.access" scopes="chat:write channels:read files:write channels:manage groups:write im:write mpim:write" />
+			<slack:oauth-callback-config listenerConfig="HTTPS_Listener_config" callbackPath="/callback" authorizePath="/authorize" externalCallbackUrl="${callback.app}/callback" />
+		</slack:slack-auth-connection>
+	</slack:config>
+	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTP Listener config" doc:id="0975e036-0fa3-498d-9002-a27e1d4b5ee8" >
+		<http:listener-connection protocol="HTTPS" host="${https.host}" port="${https.port}" >
+			<tls:context >
+				<tls:key-store type="jks" path="keystore.jks" keyPassword="${keystore.password}" password="${password}" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<flow name="Quaterly-Trigger-from-Salesforce-Flow" doc:id="00019a35-5a82-4228-ab05-6ee0671213e6" >
+		<http:request method="GET" doc:name="Call Concur and extract quaterly approved travel expenses for employee" doc:id="ebb50a68-7815-4b81-891c-c93472755f07" url="https://concur-trips-103-famj0t.5sc6y6-4.usa-e2.cloudhub.io/tripexpensesall"/>
+		<ee:transform doc:name="Transform to NZC AirTravel Data Model" doc:id="82014eab-0e92-4223-9c33-7c26f9e99c31" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload flatMap ((item, index) -> 
+    item.ExpenseReportDetailArray map ((inItem, inIndex) -> {
+    "Name": item.ExpenseReportHeader.ReportName,
+	Scope3EmssnSrcId: "0pc8Y000000blmSQAQ",
+	AirTravelEmssnFctrId: "0nt8Y000000bliFQAQ",
+    "SegmentDistance": inItem.DistanceKm,
+	SegmentDistanceUnit: "Kilometers",
+    "CostCenter": item.ExpenseReportHeader.CostCenter,
+    "SourceCity": inItem.CityStart,
+    "DestinationCity": inItem.CityEnd,
+    "StartDate": inItem.StartDateUtc as Date,
+    "EndDate": inItem.EndDateUtc as Date,
+    mulesoft_pse__Travel_Type__c: inItem.BusinessPurpose,
+    mulesoft_pse__Travel_Purpose__c: inItem.PurposeDetail
+    })
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create Business Travel Energy use Records in NZC" doc:id="06415139-37f5-488e-9ee2-ea9799e2ec2f" config-ref="Salesforce_Config" type="AirTravelEnrgyUse"/>
+		<ee:transform doc:name="Save Created Record Ids" doc:id="334f426a-0f8d-461a-9ff2-949b557c2d73" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map ( item , indexOfItem ) -> {
+	Id: item.id as String default "",
+	message: item.message default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:query doc:name="Read Scope 3 Emissions" doc:id="68525b17-c69f-487c-9abd-a23d584f8bae" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query ><![CDATA[Select Scope3EmissionsInTco2e From AirTravelEnrgyUse where Id IN (:Ids)]]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	Ids : ((payload map ("'" ++ $.Id as String ++ "'")) joinBy ',')
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Convert Scope 3 Emissions to Lbs" doc:id="c050b1b1-f95a-4066-b0a6-0aefe75e0bfa">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var toLbs = "2205"
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	Scope3EmissionsInTco2e: payload01.Scope3EmissionsInTco2e as Number default "",
+	Scope3EmissionsInLbs: (payload01.Scope3EmissionsInTco2e as Number * toLbs) as String {format: "0.00", roundMode: "CEILING"} as Number
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[sum(payload.Scope3EmissionsInLbs)]" doc:name="Calculate TotalScope3EmissionsInLbs" doc:id="5ead70b0-30db-4a03-8458-9ea387fd61cb" variableName="TotalScope3EmissionsInLbs"/>
+		<set-variable value='#[(vars.TotalScope3EmissionsInLbs/50 as Number) as String {format: "0", roundMode: "CEILING"}]' doc:name="Calculate Number of Trees" doc:id="8ca805a7-bb8c-4b51-91e7-2c2b7689deb7" variableName="Trees"/>
+		<http:request method="POST" doc:name="Create custom VTO link" doc:id="1170daea-36e6-49c7-89a5-d07e01fbb68e" url="http://vto-api.us-e2.cloudhub.io/api/vto">
+			<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+  "userID": "",
+  "numberOfTrees": vars.Trees as Number
+}]]]></http:body>
+		</http:request>
+		<ee:transform doc:name="Transform to Slack message format" doc:id="27032487-6f55-4445-a8d1-8586ed1de58f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	channel: "vto-notification",
+	text: "",
+	blocks: [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "Hey there 👋 I'm your friendly neighborhood VTO Bot. I am here to help you become a *Green Business Traveller* :green_heart:"++
+"\n"++
+"\nThis quarter you travelled a total of *" ++ (vars.TotalScope3EmissionsInLbs) ++ " kilometers* :airplane:"++
+"\nThat's *" ++ (vars.TotalScope3EmissionsInLbs) ++ " lbs* in green house gas emissions & approx. *" ++ (vars.Trees) ++ " trees* being cut down :cry:"++
+"\n"++
+"\nBut as our Chief Sustainability Officer, there are 3 ways you can offset the harmful impact:"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*1️⃣* Opt for a *greener, more sustainable* travel option in the future"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*2️⃣ Plant some trees : * Use <http://vto-api.us-e2.cloudhub.io/api/vtoInformationPage?session_id=0004b86e-ceb6-4c55-8be6-d231d26fa937|this> customized VTO link to log your hours :deciduous_tree:"
+			}
+		},
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*:three:️ Donate towards reforestation efforts : * Click <https://trees.salesforce.com|here> to support our pledge of 100 million trees by 2030 through Plant-for-the Planet’s tree planting projects :green_salad:"
+			}
+		},
+		{
+			"type": "divider"
+		}
+	]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<slack:create-chatpost-message doc:name="Send Message" doc:id="c36b07fc-30ce-4e0d-9ec7-327dfb8332ff" config-ref="Slack_Config"/>
+	</flow>
+</mule>

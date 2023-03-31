@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="concurTripResponseType" format="json">
+      <types:shape format="weave" example="examples/ConcurExpenseAPIResponse.json"><![CDATA[%dw 2.0
+
+type concurTripResponseType = Array<{|  ExpenseReportHeader: {|    ReportID: String,     ReportName: String,     ReportDate: String,     CostCenter: String  |},   ExpenseReportDetailArray: Array<{|    ExpenseType: String,     BusinessPurpose: String,     PurposeDetail: String,     TransactionDate: String,     Vendor: String,     CityStart: String,     CityEnd: String,     DistanceKm: String,     StartDateUtc: String,     EndDateUtc: String  |}>
+|}> {"example": "[{\\\"ExpenseReportHeader\\\":{\\\"ReportID\\\":\\\"124\\\",\\\"ReportName\\\":\\\"Jon Doe Expenses\\\",\\\"ReportDate\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"CostCenter\\\":\\\"50000\\\"},\\\"ExpenseReportDetailArray\\\":[{\\\"ExpenseType\\\":\\\"Airfare\\\",\\\"BusinessPurpose\\\":\\\"Customer facing\\\",\\\"PurposeDetail\\\":\\\"https:\\/\\/org62accountlink\\\",\\\"TransactionDate\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"Vendor\\\":\\\"AMERICAN AIRLINES\\\",\\\"CityStart\\\":\\\"CLT\\\",\\\"CityEnd\\\":\\\"AUS\\\",\\\"DistanceKm\\\":\\\"123\\\",\\\"StartDateUtc\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"EndDateUtc\\\":\\\"2022-12-18T00:00:00Z\\\"}]},{\\\"ExpenseReportHeader\\\":{\\\"ReportID\\\":\\\"998\\\",\\\"ReportName\\\":\\\"Jane Zoe Expenses\\\",\\\"ReportDate\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"CostCenter\\\":\\\"60000\\\"},\\\"ExpenseReportDetailArray\\\":[{\\\"ExpenseType\\\":\\\"Airfare\\\",\\\"BusinessPurpose\\\":\\\"Customer facing\\\",\\\"PurposeDetail\\\":\\\"https:\\/\\/org62accountlink\\\",\\\"TransactionDate\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"Vendor\\\":\\\"AMERICAN AIRLINES\\\",\\\"CityStart\\\":\\\"CLT\\\",\\\"CityEnd\\\":\\\"AUS\\\",\\\"DistanceKm\\\":\\\"123\\\",\\\"StartDateUtc\\\":\\\"2022-12-17T00:00:00Z\\\",\\\"EndDateUtc\\\":\\\"2022-12-18T00:00:00Z\\\"},{\\\"ExpenseType\\\":\\\"Airfare\\\",\\\"BusinessPurpose\\\":\\\"Customer facing\\\",\\\"PurposeDetail\\\":\\\"https:\\/\\/org62accountlink\\\",\\\"TransactionDate\\\":\\\"2022-12-17T02:00:00Z\\\",\\\"Vendor\\\":\\\"AMERICAN AIRLINES\\\",\\\"CityStart\\\":\\\"AUS\\\",\\\"CityEnd\\\":\\\"CLT\\\",\\\"DistanceKm\\\":\\\"123\\\",\\\"StartDateUtc\\\":\\\"2022-12-17T02:00:00Z\\\",\\\"EndDateUtc\\\":\\\"2022-12-18T02:00:00Z\\\"}]}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="recordIds" format="json">
+      <types:shape format="weave" example="examples/AirTravelRecordIds.json"><![CDATA[%dw 2.0
+
+type recordIds = Array<{|  Id: String,   message: String|}> {"example": "[{\\\"Id\\\":\\\"00abcd\\\",\\\"message\\\":\\\"success\\\"},{\\\"Id\\\":\\\"00abcd\\\",\\\"message\\\":\\\"success\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#82014eab-0e92-4223-9c33-7c26f9e99c31">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="concurTripResponseType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#334f426a-0f8d-461a-9ff2-949b557c2d73">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="recordIds"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
