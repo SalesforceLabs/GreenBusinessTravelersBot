@@ -2,11 +2,19 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "package": "GreenBusinessTravelersFlow",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "versionDescription": ""
     }
   ],
   "name": "GreenBusinessTravelersBot",
   "namespace": "mulesoft_pse",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "57.0"
+  "sourceApiVersion": "57.0",
+  "packageAliases": {
+    "GreenBusinessTravelersFlow": "0Ho3x000000KyncCAC",
+    "GreenBusinessTravelersFlow@0.1.0-1": "04t3x000001O8dTAAS"
+  }
 }

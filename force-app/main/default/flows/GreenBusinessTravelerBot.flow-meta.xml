@@ -1,21 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <description>Get BusinessVTO records from MuleSoft API</description>
-        <name>GetBusinessVTORecs</name>
-        <label>GetBusinessVTORecs</label>
+        <name>CreateTravelRecord</name>
+        <label>CreateTravelRecord</label>
         <locationX>176</locationX>
         <locationY>276</locationY>
-        <actionName>mulesoft_pse::BetaBusinessVTO.BetaGetRecs</actionName>
+        <actionName>mulesoft_pse::ConcurBusinessAPI.createRecord</actionName>
         <actionType>externalService</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <apiVersion>57.0</apiVersion>
-    <description>A flow that calls the Business-VTO-1 API</description>
     <environments>Default</environments>
-    <interviewLabel>BusinessVTO1 {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>GreenBusinessTravelerBotFlow</label>
+    <interviewLabel>GreenBusinessTravelerBot {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>GreenBusinessTravelerBot</label>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -39,7 +36,7 @@
         <locationX>50</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>GetBusinessVTORecs</targetReference>
+            <targetReference>CreateTravelRecord</targetReference>
         </connector>
         <schedule>
             <frequency>Daily</frequency>
